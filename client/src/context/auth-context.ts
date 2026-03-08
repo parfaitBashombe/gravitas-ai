@@ -1,9 +1,12 @@
 import { createContext, useContext } from "react";
-import type { User } from "../types";
+import type { User, UserProfile } from "../types";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  saveProfile: (
+    profile: Omit<UserProfile, "userId" | "updatedAt">,
+  ) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
