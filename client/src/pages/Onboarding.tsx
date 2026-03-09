@@ -1,9 +1,6 @@
-import React, { useState } from "react";
-
+import React, { useEffect, useState } from "react";
 import { RedirectToSignIn, SignedIn } from "@neondatabase/neon-js/auth/react";
-
 import { useAuth } from "../context/auth-context";
-
 import { Card } from "../components/ui/card";
 import { Select } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
@@ -13,7 +10,7 @@ import type { UserProfile } from "../types";
 import { useNavigate } from "react-router-dom";
 
 const Onboarding = () => {
-  const { user, saveProfile } = useAuth();
+  const { user, plan, saveProfile, generatePlan } = useAuth();
 
   const [formData, setFormData] = useState({
     goal: "bulk",
@@ -26,49 +23,59 @@ const Onboarding = () => {
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (hasSubmitted && plan) {
+      navigate("/profile", { replace: true });
+    }
+  }, [hasSubmitted, plan, navigate]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
+    setIsGenerating(true);
+    setHasSubmitted(true);
+
     const profile: Omit<UserProfile, "userId" | "updatedAt"> = {
       goal: formData.goal as UserProfile["goal"],
       experience: formData.experience as UserProfile["experience"],
-      daysPerWeek: parseInt(formData.daysPerWeek),
-      sessionLength: parseInt(formData.sessionLength),
+      daysPerWeek: Number(formData.daysPerWeek),
+      sessionLength: Number(formData.sessionLength),
       equipment: formData.equipment as UserProfile["equipment"],
       injuries: formData.injuries || undefined,
       preferredSplit: formData.preferredSplit as UserProfile["preferredSplit"],
     };
 
     try {
-      setIsGenerating(true);
       await saveProfile(profile);
-      // await generatePlan();
-      navigate("/profile");
+      await generatePlan();
+
+      // Fallback: if context hasn't updated yet, still go to profile.
+      navigate("/profile", { replace: true });
     } catch (error) {
+      setHasSubmitted(false);
+      setIsGenerating(false);
       setError(
         error instanceof Error ? error.message : "Failed to save profile",
       );
-    } finally {
-      setIsGenerating(false);
     }
   };
 
   if (!user) {
     return <RedirectToSignIn />;
   }
+
   return (
     <SignedIn>
       <div className="min-h-screen pt-24 pb-12 px-6">
         <div className="max-w-xl mx-auto">
-          {/* Progress Indicator */}
-
-          {/* Step 1: Questionnaire */}
           {!isGenerating ? (
             <Card variant="bordered">
               <h1 className="text-2xl font-bold mb-2">
@@ -126,7 +133,6 @@ const Onboarding = () => {
                   value={formData.equipment}
                   onChange={(e) => handleChange("equipment", e.target.value)}
                 />
-
                 <Select
                   id="preferredSplit"
                   label="Preferred training split"
@@ -136,7 +142,6 @@ const Onboarding = () => {
                     handleChange("preferredSplit", e.target.value)
                   }
                 />
-
                 <Textarea
                   id="injuries"
                   label="Any injuries or limitations ? (optional)"
@@ -146,7 +151,11 @@ const Onboarding = () => {
                   onChange={(e) => handleChange("injuries", e.target.value)}
                 />
                 <div className="flex gap-3 pt-2">
-                  <Button type="submit" className="flex-1 gap-2">
+                  <Button
+                    type="submit"
+                    className="flex-1 gap-2"
+                    disabled={isGenerating}
+                  >
                     Generate My Plan <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -166,6 +175,7 @@ const Onboarding = () => {
     </SignedIn>
   );
 };
+
 export default Onboarding;
 
 const goalOptions = [
