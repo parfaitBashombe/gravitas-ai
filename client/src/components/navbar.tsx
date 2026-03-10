@@ -33,6 +33,11 @@ const Navbar = () => {
           <nav className="hidden sm:flex items-center gap-2">
             {user ? (
               <>
+                <Link to="/onboarding">
+                  <Button variant="ghost" size="sm">
+                    Profile Settings
+                  </Button>
+                </Link>
                 <Link to="/profile">
                   <Button variant="ghost" size="sm">
                     My Plan
@@ -103,6 +108,15 @@ const Navbar = () => {
         <nav className="flex flex-col gap-2 px-4 py-6 flex-1">
           {user ? (
             <>
+              <Link to="/onboarding" onClick={() => setMenuOpen(false)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-base h-12"
+                >
+                  Profile Settings
+                </Button>
+              </Link>
               <Link to="/profile" onClick={() => setMenuOpen(false)}>
                 <Button
                   variant="ghost"

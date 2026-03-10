@@ -63,4 +63,40 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    const profile = await prisma.user_profiles.findUnique({
+      where: { user_id: userId },
+    });
+
+    if (!profile) {
+      // It's perfectly normal for a new user not to have a profile yet
+      return res.json({ profile: null });
+    }
+
+    res.json({
+      profile: {
+        userId: profile.user_id,
+        goal: profile.goal,
+        experience: profile.experience,
+        daysPerWeek: profile.days_per_week,
+        sessionLength: profile.session_length,
+        equipment: profile.equipment,
+        injuries: profile.injuries,
+        preferredSplit: profile.preferred_split,
+        updatedAt: profile.updated_at,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
+});
+
 export default router;

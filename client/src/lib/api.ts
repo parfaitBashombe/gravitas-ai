@@ -32,6 +32,10 @@ export const api = {
     return post("/profile", { userId, ...profile });
   },
 
+  getProfile: (userId: string) => {
+    return get(`/profile?userId=${userId}`);
+  },
+
   generatePlan: (userId: string) => {
     return post("/plan/generate", { userId });
   },

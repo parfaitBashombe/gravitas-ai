@@ -13,6 +13,10 @@ import { api } from "../lib/api";
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [neonUser, setNeonUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<Omit<
+    UserProfile,
+    "userId" | "updatedAt"
+  > | null>(null);
   const [plan, setPlan] = useState<TrainingPlan | null>(null);
   const isRefreshingRef = useRef(false);
 
@@ -24,7 +28,25 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     isRefreshingRef.current = true;
 
     try {
-      const planData = await api.getCurrentPlan(userId).catch(() => null);
+      // Fetch both profile and plan in parallel
+      const [profileRes, planData] = await Promise.all([
+        api.getProfile(userId).catch(() => null),
+        api.getCurrentPlan(userId).catch(() => null),
+      ]);
+
+      if (profileRes?.profile) {
+        setProfile({
+          goal: profileRes.profile.goal,
+          experience: profileRes.profile.experience,
+          daysPerWeek: profileRes.profile.daysPerWeek,
+          sessionLength: profileRes.profile.sessionLength,
+          equipment: profileRes.profile.equipment,
+          injuries: profileRes.profile.injuries,
+          preferredSplit: profileRes.profile.preferredSplit,
+        });
+      } else {
+        setProfile(null);
+      }
 
       if (!planData) {
         setPlan(null);
@@ -42,6 +64,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error) {
       console.error("Error refreshing data:", error);
+      setProfile(null);
       setPlan(null);
     } finally {
       isRefreshingRef.current = false;
@@ -116,6 +139,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user: neonUser,
+        profile,
         isLoading,
         saveProfile,
         generatePlan,

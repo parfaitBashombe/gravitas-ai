@@ -3,6 +3,7 @@ import type { TrainingPlan, User, UserProfile } from "../types";
 
 interface AuthContextType {
   user: User | null;
+  profile: Omit<UserProfile, "userId" | "updatedAt"> | null;
   plan: TrainingPlan | null;
   isLoading: boolean;
   saveProfile: (
