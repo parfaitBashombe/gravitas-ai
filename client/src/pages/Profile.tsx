@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { PlanDisplay } from "../components/plan/plan-display";
+import { GenerationLoader } from "../components/ui/generation-loader";
 
 const Profile = () => {
   const { user, isLoading, plan, generatePlan } = useAuth();
@@ -60,11 +61,8 @@ const Profile = () => {
     <div className="min-h-screen pt-24 pb-12 px-6">
       {/* Full-page overlay while regenerating */}
       {isRegenerating && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
-          <Loader2 className="w-10 h-10 text-accent animate-spin" />
-          <p className="text-sm text-muted font-medium">
-            Regenerating your training plan…
-          </p>
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+          <GenerationLoader title="Regenerating your Plan" />
         </div>
       )}
 

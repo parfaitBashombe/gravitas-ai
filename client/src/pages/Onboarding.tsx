@@ -1,37 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { RedirectToSignIn, SignedIn } from "@neondatabase/neon-js/auth/react";
 import { useAuth } from "../context/auth-context";
 import { Card } from "../components/ui/card";
 import { Select } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { UserProfile } from "../types";
 import { useNavigate } from "react-router-dom";
+import { GenerationLoader } from "../components/ui/generation-loader";
 
 const Onboarding = () => {
-  const { user, plan, saveProfile, generatePlan } = useAuth();
+  const { user, profile, saveProfile, generatePlan } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    goal: "bulk",
-    experience: "intermediate",
-    daysPerWeek: "4",
-    sessionLength: "60",
-    equipment: "full_gym",
-    injuries: "",
-    preferredSplit: "upper_lower",
+    goal: profile?.goal || "bulk",
+    experience: profile?.experience || "intermediate",
+    daysPerWeek: String(profile?.daysPerWeek || "4"),
+    sessionLength: String(profile?.sessionLength || "60"),
+    equipment: profile?.equipment || "full_gym",
+    injuries: profile?.injuries || "",
+    preferredSplit: profile?.preferredSplit || "upper_lower",
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (hasSubmitted && plan) {
-      navigate("/profile", { replace: true });
-    }
-  }, [hasSubmitted, plan, navigate]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -41,9 +35,8 @@ const Onboarding = () => {
     e.preventDefault();
     setError("");
     setIsGenerating(true);
-    setHasSubmitted(true);
 
-    const profile: Omit<UserProfile, "userId" | "updatedAt"> = {
+    const profilePayload: Omit<UserProfile, "userId" | "updatedAt"> = {
       goal: formData.goal as UserProfile["goal"],
       experience: formData.experience as UserProfile["experience"],
       daysPerWeek: Number(formData.daysPerWeek),
@@ -54,16 +47,15 @@ const Onboarding = () => {
     };
 
     try {
-      await saveProfile(profile);
+      await saveProfile(profilePayload);
       await generatePlan();
 
       // Fallback: if context hasn't updated yet, still go to profile.
       navigate("/profile", { replace: true });
-    } catch (error) {
-      setHasSubmitted(false);
+    } catch (err) {
       setIsGenerating(false);
       setError(
-        error instanceof Error ? error.message : "Failed to save profile",
+        err instanceof Error ? err.message : "Failed to save profile",
       );
     }
   };
@@ -72,6 +64,8 @@ const Onboarding = () => {
     return <RedirectToSignIn />;
   }
 
+  const isUpdating = !!profile;
+
   return (
     <SignedIn>
       <div className="min-h-screen pt-24 pb-12 px-6">
@@ -79,10 +73,12 @@ const Onboarding = () => {
           {!isGenerating ? (
             <Card variant="bordered">
               <h1 className="text-2xl font-bold mb-2">
-                Tell Us About Yourself
+                {isUpdating ? "Update Your Profile" : "Tell Us About Yourself"}
               </h1>
               <p className="text-muted mb-6">
-                Help us create the perfect plan for you.
+                {isUpdating 
+                  ? "Update your settings and we'll generate a fresh training plan."
+                  : "Help us create the perfect plan for you."}
               </p>
 
               {error && (
@@ -156,18 +152,14 @@ const Onboarding = () => {
                     className="flex-1 gap-2"
                     disabled={isGenerating}
                   >
-                    Generate My Plan <ArrowRight className="w-4 h-4" />
+                    {isUpdating ? "Update Profile & Generate New Plan" : "Generate My Plan"} <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
               </form>
             </Card>
           ) : (
-            <Card variant="bordered" className="text-center py-16">
-              <Loader2 className="w-12 h-12 text-accent mx-auto mb-6 animate-spin" />
-              <h1 className="text-2xl font-bold mb-2">Creating your Plan</h1>
-              <p className="text-muted">
-                Our AI is building your personalized training program...
-              </p>
+            <Card variant="bordered" className="py-16">
+              <GenerationLoader />
             </Card>
           )}
         </div>

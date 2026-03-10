@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import dotenv from "dotenv";
 import { TrainingPlan, UserProfile } from "../../src/types/index";
 
@@ -6,10 +5,10 @@ dotenv.config();
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const isRetriableError = (error: any) => {
-  const status = error?.status ?? error?.code;
-  return [429, 502, 503, 504, 529].includes(status);
-};
+// const isRetriableError = (error: any) => {
+//   const status = error?.status ?? error?.code;
+//   return [429, 502, 503, 504, 529].includes(status);
+// };
 
 const getReadableErrorMessage = (error: any) => {
   return (
@@ -33,52 +32,62 @@ export const generateTrainingPlan = async (
     preferred_split: profile.preferred_split || "upper_lower",
   };
 
-  const apiKey = process.env.OPEN_ROUTER_KEY;
+  const apiKey = process.env.GOOGLE_AI_KEY;
 
   if (!apiKey) {
-    throw new Error("OPEN_ROUTER_KEY is not set in environment variables");
+    throw new Error("GOOGLE_AI_KEY is not set in environment variables");
   }
-
-  const openai = new OpenAI({
-    apiKey,
-    baseURL: "https://openrouter.ai/api/v1",
-    defaultHeaders: {
-      "HTTP-Referer": process.env.BASE_URL || "http://localhost:5000",
-      "X-Title": "GravitasAI Plan Generator",
-    },
-  });
 
   const prompt = buildPrompt(normalizedProfile);
 
-  // First try env-configured model, then free router, then your pinned free model
-  const models = [
-    process.env.OPEN_ROUTER_MODEL,
-    "openrouter/free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-  ].filter(Boolean) as string[];
+  const models = [process.env.GOOGLE_AI_MODEL || "gemini-2.5-flash"].filter(
+    Boolean,
+  ) as string[];
 
   let lastError: any;
 
   for (const model of models) {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const completion = await openai.chat.completions.create({
-          model,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are an expert fitness trainer and program designer. Respond with valid JSON only. Do not include markdown, explanations, or extra text.",
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-          temperature: 0.7,
-          response_format: { type: "json_object" },
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
+        const response = await fetch(
+          "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model,
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "You are an expert fitness trainer and program designer. Respond with valid JSON only. Do not include markdown, explanations, or extra text.",
+                },
+                {
+                  role: "user",
+                  content: prompt,
+                },
+              ],
+              temperature: 0.7,
+              response_format: { type: "json_object" },
+            }),
+          },
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => "No error body");
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const completion: any = await response.json();
         const content = completion.choices?.[0]?.message?.content;
 
         if (!content) {
@@ -90,15 +99,23 @@ export const generateTrainingPlan = async (
       } catch (error: any) {
         lastError = error;
 
+        let statusCode = error?.status ?? error?.code;
+        if (!statusCode && error?.message?.startsWith("HTTP ")) {
+          const match = error.message.match(/HTTP (\d+):/);
+          if (match) statusCode = parseInt(match[1], 10);
+        }
+
         console.error("[AI] model attempt failed", {
           model,
           attempt,
-          status: error?.status ?? error?.code,
+          status: statusCode,
           provider: error?.error?.metadata?.provider_name,
           message: getReadableErrorMessage(error),
         });
 
-        if (!isRetriableError(error) || attempt === 3) {
+        const isRetriable = [429, 502, 503, 504, 529].includes(statusCode);
+
+        if (!isRetriable || attempt === 3) {
           break;
         }
 
