@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "pnpm install && pnpm run build",
+  "buildCommand": "pnpm install && npx prisma generate && pnpm run build",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api" }
   ]
