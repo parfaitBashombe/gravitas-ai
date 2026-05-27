@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader2, Check, Circle } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface GenerationLoaderProps {
   title?: string;
@@ -7,38 +7,44 @@ interface GenerationLoaderProps {
 }
 
 const loadingSteps = [
-  "Analyzing your fitness goals...",
-  "Evaluating your experience level...",
-  "Selecting the best training split...",
-  "Calibrating exercise volume and intensity...",
-  "Building your weekly schedule...",
-  "Finalizing progression strategy...",
-  "Almost ready...",
+  "Analyzing your fitness profile…",
+  "Selecting the optimal training split…",
+  "Programming exercise volume and intensity…",
+  "Building your weekly schedule…",
+  "Writing progression guidelines…",
+  "Finalizing your plan…",
 ];
 
 export const GenerationLoader: React.FC<GenerationLoaderProps> = ({
-  title = "Creating your Plan",
+  title = "Building your plan",
   className = "",
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev === loadingSteps.length - 1) return prev;
-        return prev + 1;
-      });
+      setCurrentStep((prev) =>
+        prev < loadingSteps.length - 1 ? prev + 1 : prev,
+      );
     }, 4500);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <Loader2 className="w-12 h-12 text-accent mb-6 animate-spin" />
-      <h1 className="text-2xl font-bold mb-6">{title}</h1>
+      <div className="flex gap-1.5 mb-8">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-2 h-2 rounded-full bg-accent animate-bounce"
+            style={{ animationDelay: `${i * 0.15}s` }}
+          />
+        ))}
+      </div>
 
-      <div className="flex flex-col items-start space-y-3 w-full max-w-sm mx-auto pl-4">
+      <h2 className="text-xl font-bold mb-8 text-center">{title}</h2>
+
+      <div className="space-y-3 w-full max-w-xs">
         {loadingSteps.map((step, index) => {
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
@@ -47,20 +53,26 @@ export const GenerationLoader: React.FC<GenerationLoaderProps> = ({
           return (
             <div
               key={step}
-              className={`flex items-center gap-3 transition-opacity duration-500 ${
-                isPending ? "opacity-30" : "opacity-100"
+              className={`flex items-center gap-3 transition-all duration-500 ${
+                isPending ? "opacity-20" : "opacity-100"
               }`}
             >
               {isCompleted ? (
-                <Check className="w-5 h-5 text-green-500" />
-              ) : isCurrent ? (
-                <Loader2 className="w-5 h-5 text-accent animate-spin" />
+                <Check className="w-3.5 h-3.5 text-accent shrink-0" />
               ) : (
-                <Circle className="w-5 h-5 text-muted-foreground" />
+                <div
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
+                    isCurrent ? "bg-accent animate-pulse" : "bg-muted"
+                  }`}
+                />
               )}
               <span
-                className={`text-sm md:text-base ${
-                  isCurrent ? "font-semibold text-foreground" : "text-muted"
+                className={`text-sm ${
+                  isCurrent
+                    ? "text-foreground font-medium"
+                    : isCompleted
+                      ? "text-muted"
+                      : "text-muted"
                 }`}
               >
                 {step}

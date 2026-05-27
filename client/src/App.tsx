@@ -9,13 +9,15 @@ import Navbar from "./components/navbar";
 import { NeonAuthUIProvider } from "@neondatabase/neon-js/auth/react";
 import { authClient } from "./lib/auth";
 import AuthProvider from "./context/auth-provider";
+import { GlobalCursorLight } from "./components/ui/global-cursor-light";
 
 const App = () => {
   return (
     <NeonAuthUIProvider authClient={authClient} defaultTheme="dark">
       <AuthProvider>
         <BrowserRouter>
-          <div className="min-h-screen flex flex-col">
+          <GlobalCursorLight />
+          <div className="relative min-h-screen flex flex-col" style={{ zIndex: 1 }}>
             <Navbar />
             <main className="flex-1">
               <Routes>

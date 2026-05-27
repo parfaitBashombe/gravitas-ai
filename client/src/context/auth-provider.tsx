@@ -13,6 +13,7 @@ import { api } from "../lib/api";
 const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [neonUser, setNeonUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDataReady, setIsDataReady] = useState(false);
   const [profile, setProfile] = useState<Omit<
     UserProfile,
     "userId" | "updatedAt"
@@ -23,7 +24,8 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshData = useCallback(async () => {
     const userId = neonUser?.id;
 
-    if (!userId || isRefreshingRef.current) return;
+    if (isRefreshingRef.current) return;
+    if (!userId) { setIsDataReady(true); return; }
 
     isRefreshingRef.current = true;
 
@@ -68,6 +70,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
       setPlan(null);
     } finally {
       isRefreshingRef.current = false;
+      setIsDataReady(true);
     }
   }, [neonUser?.id]);
 
@@ -114,14 +117,16 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const generatePlan = useCallback(async () => {
-    if (!neonUser?.id) {
-      throw new Error("User must be authenticated to generate plan");
-    }
-
-    await api.generatePlan(neonUser.id);
-    await refreshData();
-  }, [neonUser?.id, refreshData]);
+  const generatePlan = useCallback(
+    async (options?: { force?: boolean }) => {
+      if (!neonUser?.id) {
+        throw new Error("User must be authenticated to generate plan");
+      }
+      await api.generatePlan(neonUser.id, options);
+      await refreshData();
+    },
+    [neonUser?.id, refreshData],
+  );
 
   const saveProfile = useCallback(
     async (profileData: Omit<UserProfile, "userId" | "updatedAt">) => {
@@ -141,6 +146,7 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
         user: neonUser,
         profile,
         isLoading,
+        isDataReady,
         saveProfile,
         generatePlan,
         refreshData,

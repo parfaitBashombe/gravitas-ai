@@ -1,5 +1,5 @@
 import type { UserProfile } from "../types";
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const post = async (path: string, body: object) => {
   const res = await fetch(`${BASE_URL}/api${path}`, {
@@ -36,8 +36,8 @@ export const api = {
     return get(`/profile?userId=${userId}`);
   },
 
-  generatePlan: (userId: string) => {
-    return post("/plan/generate", { userId });
+  generatePlan: (userId: string, options?: { force?: boolean }) => {
+    return post("/plan/generate", { userId, force: options?.force ?? false });
   },
 
   getCurrentPlan: (userId: string) => {

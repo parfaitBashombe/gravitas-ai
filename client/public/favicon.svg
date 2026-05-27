@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="7" fill="#171717"/>
+
+  <!-- Dumbbell rotated -45° centered in the icon -->
+  <g transform="translate(16,16) rotate(-45)">
+    <!-- Thin connecting bar -->
+    <rect x="-5.5" y="-1" width="11" height="2" rx="1" fill="#f97316"/>
+
+    <!-- Left inner plate (big) -->
+    <rect x="-8.25" y="-4.5" width="2.5" height="9" rx="1.25" fill="#f97316"/>
+    <!-- Left inner plate highlight -->
+    <rect x="-7.75" y="-3.2" width="1.5" height="6.4" rx="0.75" fill="#fb923c" opacity="0.5"/>
+    <!-- Left outer plate (small) -->
+    <rect x="-10.5" y="-3" width="1.75" height="6" rx="0.875" fill="#f97316"/>
+
+    <!-- Right inner plate (big) -->
+    <rect x="5.75" y="-4.5" width="2.5" height="9" rx="1.25" fill="#f97316"/>
+    <!-- Right inner plate highlight -->
+    <rect x="6.25" y="-3.2" width="1.5" height="6.4" rx="0.75" fill="#fb923c" opacity="0.5"/>
+    <!-- Right outer plate (small) -->
+    <rect x="8.75" y="-3" width="1.75" height="6" rx="0.875" fill="#f97316"/>
+  </g>
+</svg>

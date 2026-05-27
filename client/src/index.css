@@ -4,16 +4,73 @@
 @theme {
   --font-sans: "Geist", system-ui, sans-serif;
 
-  --color-background: #0a0a0a;
-  --color-foreground: #fafafa;
-  --color-muted: #a1a1aa;
-  --color-border: #27272a;
-  --color-card: #18181b;
-  --color-accent: #a3e635;
-  --color-accent-hover: #84cc16;
+  --color-background: #0d0d0d;
+  --color-foreground: #f5f5f4;
+  --color-muted: #a3a3a3;
+  --color-border: #262626;
+  --color-card: #171717;
+  --color-accent: #f97316;
+  --color-accent-hover: #ea580c;
 }
 
+/* ── Animations ────────────────────────────────────────── */
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes bounce-dots {
+  0%, 80%, 100% { transform: translateY(0);    }
+  40%           { transform: translateY(-6px); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease both;
+}
+
+/* ── Base ──────────────────────────────────────────────── */
+
 @layer base {
+  /* Shadcn-style vars consumed by @neondatabase/neon-js auth UI */
+  :root,
+  :root.dark {
+    --background: #0d0d0d;
+    --foreground: #f5f5f4;
+    --card: #171717;
+    --card-foreground: #f5f5f4;
+    --popover: #171717;
+    --popover-foreground: #f5f5f4;
+    --primary: #f97316;
+    --primary-foreground: #ffffff;
+    --secondary: #262626;
+    --secondary-foreground: #f5f5f4;
+    --muted: #262626;
+    --muted-foreground: #a3a3a3;
+    --accent: #262626;
+    --accent-foreground: #f5f5f4;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #262626;
+    --input: #1f1f1f;
+    --ring: #f97316;
+    --radius: 0.5rem;
+  }
+
   html {
     font-family: var(--font-sans);
     background-color: var(--color-background);
@@ -27,9 +84,21 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Override Better Auth skeleton colors */
+  /* Scrollbar */
+  ::-webkit-scrollbar       { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+
+  /* Neon Auth skeleton override */
   [data-slot="skeleton"],
   .animate-pulse {
     background-color: var(--color-border) !important;
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(249, 115, 22, 0.25);
+    color: var(--color-foreground);
   }
 }

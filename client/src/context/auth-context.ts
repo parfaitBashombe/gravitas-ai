@@ -6,10 +6,11 @@ interface AuthContextType {
   profile: Omit<UserProfile, "userId" | "updatedAt"> | null;
   plan: TrainingPlan | null;
   isLoading: boolean;
+  isDataReady: boolean;
   saveProfile: (
     profile: Omit<UserProfile, "userId" | "updatedAt">,
   ) => Promise<void>;
-  generatePlan: () => Promise<void>;
+  generatePlan: (options?: { force?: boolean }) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
